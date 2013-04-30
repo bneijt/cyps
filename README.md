@@ -1,10 +1,7 @@
 Clean your projects (cyps)
+--------------------------
+_A programmers clean-up utility_
 
-A programmers clean-up tool. Recursively goes trough directories and finds which projects need to be cleaned (git gc, maven clean, cabal distclean, etc)
+Recursively goes through directories and executes clean commands (`git gc`, `maven clean`, `cabal clean`, etc.)
 
-  - Simple script
-  - Cleans up:
-    - Maven
-  - Compacts:
-    - Git
 
