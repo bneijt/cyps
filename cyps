@@ -12,13 +12,13 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import System.Directory (getDirectoryContents, doesDirectoryExist, doesFileExist)
+import System.Directory (getDirectoryContents, doesDirectoryExist, doesFileExist, setCurrentDirectory, getCurrentDirectory)
 import System.FilePath ((</>))
 import Control.Monad (forM_, filterM)
 import System.Process (system)
 
-
-actions :: [(FilePath -> IO Bool, IO())]
+type Action = (FilePath -> IO Bool, FilePath -> IO())
+actions :: [Action]
 actions = [
     (containsDirectory ".git", run "git gc"),
     (containsFile "pom.xml", run "mvn clean"),
@@ -26,9 +26,13 @@ actions = [
     (containsFile "Setup.hs", run "cabal clean")
     ]
 
-run :: String -> IO ()
-run command = do
+run :: String -> FilePath -> IO ()
+run command path = do
+    oldPwd <- getCurrentDirectory
+    setCurrentDirectory path
+    putStrLn ("[" ++ path ++ "]")
     system command
+    setCurrentDirectory oldPwd
     return ()
 
 containsDirectory :: FilePath -> FilePath -> IO Bool
@@ -43,17 +47,16 @@ depthFirstDirectories directory = do
     directories <- filterM doesDirectoryExist contents
     return (directory : filter (`notElem` [".", ".."]) directories)
 
-ifApplicableApply :: FilePath -> (FilePath -> IO Bool, IO()) -> IO()
+ifApplicableApply :: FilePath -> Action -> IO()
 ifApplicableApply path (test, command) = do
     applicable <- test path
     if applicable
-        then command
+        then command path
         else return ()
 
-performActions :: [(FilePath -> IO Bool, IO())] -> FilePath -> IO ()
-performActions actions path = do
-    putStrLn ("-- " ++ path)
-    forM_ actions (ifApplicableApply path)
+performActions :: [Action] -> FilePath -> IO ()
+performActions acts path = do
+    forM_ acts (ifApplicableApply path)
 
 main = do
     directories <- depthFirstDirectories "."
