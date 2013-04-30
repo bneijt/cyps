@@ -15,11 +15,18 @@
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.FilePath ((</>))
 import Control.Monad (forM_, filterM)
+import System.Process (system)
+
 
 actions :: [(FilePath -> IO Bool, IO())]
 actions = [
-    (containsDirectory ".git", putStrLn "git gc")
+    (containsDirectory ".git", run "git gc")
     ]
+
+run :: String -> IO ()
+run command = do
+    system command
+    return ()
 
 containsDirectory :: FilePath -> FilePath -> IO Bool
 containsDirectory dirName path = doesDirectoryExist (path </> dirName)
@@ -32,6 +39,7 @@ depthFirstDirectories directory = do
 
 ifApplicableApply :: FilePath -> (FilePath -> IO Bool, IO()) -> IO()
 ifApplicableApply path (test, command) = do
+    putStrLn ("-- " ++ path)
     applicable <- test path
     if applicable
         then command
@@ -43,7 +51,7 @@ performActions actions path = forM_ actions (ifApplicableApply path)
 main = do
     directories <- depthFirstDirectories "."
     forM_ directories (performActions actions) 
-    putStrLn $ show (take 10 directories)
+    putStrLn "Done"
 
 
 
