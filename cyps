@@ -30,7 +30,8 @@ run :: String -> FilePath -> IO ()
 run command path = do
     oldPwd <- getCurrentDirectory
     setCurrentDirectory path
-    putStrLn ("[" ++ path ++ "]")
+    curPwd <- getCurrentDirectory
+    putStrLn ("[" ++ curPwd ++ "]")
     system command
     setCurrentDirectory oldPwd
     return ()
