@@ -2,28 +2,37 @@ Clean your projects (cyps)
 --------------------------
 _A programmers clean-up utility_
 
-Recursively goes through directories and executes clean commands (`git gc`, `maven clean`, `cabal clean`, etc.)
+Recursively walks the current directory up to `--max-depth` levels (default 2)
+and executes clean commands (`git gc`, `mvn clean`, `cargo clean`, etc.) where
+applicable.
 
-The single tools is good enough for me, but I'd be happy to pull in changes for the following features:
+The single tool is good enough for me, but I'd be happy to pull in changes for
+the following features:
 
-- Filter actions based on which tools you have, so `cyps` will not try to run `mvn clean` when you don't have `mvn`.
+- Filter actions based on which tools you have, so `cyps` will not try to run
+  `mvn clean` when you don't have `mvn`.
 - More clean up jobs
 - Refactoring towards a more DSL like approach
-- Support for `--help`
 
 
 Configure and install
 ---------------------
-The command is a single Haskell script that needs to be run by `runghc`.
+The command is a single Rust binary.
 
-To configure the command, open in any text editor and edit the `actions` value. This is a listing of `(condition, command)` tuples.
+Build it with:
 
-    actions :: [Action]
-    actions = [
-        (containsDirectory ".git", run "git gc"),
-        (containsFile "pom.xml", run "mvn clean"),
-        (containsFile "ccResolutions", run "ccbuild distclean"),
-        (containsFile "Setup.hs", run "cabal clean")
-        ]
+    cargo build --release
 
-The first element of the list can be read as: if a directory `containsDirectory` named `.git`, then `run` the command `git gc`.
+The binary is `target/release/cyps`. Copy it somewhere on your `PATH`, for
+example:
+
+    install -m 755 target/release/cyps ~/.local/bin/cyps
+
+Run with:
+
+    cyps [--max-depth DEPTH]
+
+`--max-depth` (or `-d`) controls how deep the walk goes. The current directory
+is depth 0, so the default of 2 visits the current directory, its children, and
+its grandchildren. Use `-d 1` for the old behaviour of only visiting immediate
+subdirectories. `cyps --help` shows the available options.
